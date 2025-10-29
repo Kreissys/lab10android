@@ -1,4 +1,4 @@
-package com.example.lab10.data
+package com.example.lab10.data // or com.tecsup.lab10.data
 
 import retrofit2.Response
 import retrofit2.http.Body
@@ -10,19 +10,21 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface SerieApiService {
-    @GET("serie")
+    // La ruta será: BASE_URL + "serie/" = http://10.0.2.2:8000/api/serie/
+    @GET("serie/")
     suspend fun getSeries(): List<SerieModel>
 
-    @GET("serie/{id}")
+    // La ruta será: BASE_URL + "serie/{id}/" = http://10.0.2.2:8000/api/serie/1/
+    @GET("serie/{id}/")
     suspend fun getSerie(@Path("id") id: String): Response<SerieModel>
 
     @Headers("Content-Type: application/json")
-    @POST("serie")
+    @POST("serie/")
     suspend fun insertSerie(@Body serie: SerieModel): Response<SerieModel>
 
-    @PUT("serie/{id}")
+    @PUT("serie/{id}/")
     suspend fun updateSerie(@Path("id") id: String, @Body serie: SerieModel): Response<SerieModel>
 
-    @DELETE("serie/{id}")
+    @DELETE("serie/{id}/")
     suspend fun deleteSerie(@Path("id") id: String): Response<Unit>
 }
