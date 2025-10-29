@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,11 +22,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.lab10.data.SerieApiService
+import com.example.lab10.data.product.ProductRetrofitClient
+import com.example.lab10.view.product.ProductEditScreen
+import com.example.lab10.view.product.ProductListScreen
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // La BASE_URL debe incluir el prefijo "api/"
     private const val BASE_URL = "http://10.0.2.2:8000/api/"
 
     val instance: SerieApiService by lazy {
@@ -55,7 +58,7 @@ fun SeriesApp() {
 fun TopBar() {
     CenterAlignedTopAppBar(
         title = {
-            Text(text = "SERIES APP", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(text = "APP DE LAB10", color = Color.White, fontWeight = FontWeight.Bold)
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary
@@ -81,6 +84,12 @@ fun BottomBar(navController: NavHostController) {
             selected = currentRoute == "series",
             onClick = { navController.navigate("series") }
         )
+        NavigationBarItem(
+            icon = { Icon(Icons.Outlined.ShoppingCart, contentDescription = "Products") },
+            label = { Text("Products") },
+            selected = currentRoute == "products",
+            onClick = { navController.navigate("products") }
+        )
     }
 }
 
@@ -88,11 +97,18 @@ fun BottomBar(navController: NavHostController) {
 fun Fab(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    if (currentRoute == "series") {
+
+    if (currentRoute == "series" || currentRoute == "products") {
         FloatingActionButton(
-            onClick = { navController.navigate("series/new") }
+            onClick = {
+                if (currentRoute == "series") {
+                    navController.navigate("series/new")
+                } else if (currentRoute == "products") {
+                    navController.navigate("products/new")
+                }
+            }
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Serie")
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
         }
     }
 }
@@ -103,8 +119,11 @@ fun AppContent(
     navController: NavHostController,
     apiService: SerieApiService
 ) {
+    val productApiService = ProductRetrofitClient.instance
+
     Box(modifier = Modifier.padding(paddingValues)) {
         NavHost(navController = navController, startDestination = "home") {
+            // Rutas de Series
             composable("home") { HomeScreen() }
             composable("series") { SeriesListScreen(navController, apiService) }
             composable("series/new") {
@@ -116,6 +135,21 @@ fun AppContent(
             ) { backStackEntry ->
                 val serieId = backStackEntry.arguments?.getString("serieId")
                 SeriesEditScreen(navController, apiService, serieId)
+            }
+
+            // Rutas de Productos
+            composable("products") {
+                ProductListScreen(navController, productApiService)
+            }
+            composable("products/new") {
+                ProductEditScreen(navController, productApiService, null)
+            }
+            composable(
+                "products/edit/{productId}",
+                arguments = listOf(navArgument("productId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId")
+                ProductEditScreen(navController, productApiService, productId)
             }
         }
     }
